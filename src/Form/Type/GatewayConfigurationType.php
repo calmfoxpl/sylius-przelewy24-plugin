@@ -19,6 +19,8 @@ use Symfony\Component\Validator\Constraints\Regex;
  *
  * The two keys never travel back into the HTML. A key field left empty on save means "keep the
  * one I have", so changing a method's name or channels does not mean pasting the keys again.
+ *
+ * @extends AbstractType<array<string, mixed>>
  */
 final class GatewayConfigurationType extends AbstractType
 {
