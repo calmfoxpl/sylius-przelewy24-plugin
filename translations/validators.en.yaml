@@ -1,0 +1,4 @@
+calmfox_przelewy24.digits_only: 'Enter digits only.'
+calmfox_przelewy24.merchant_id.not_blank: 'Enter the merchant ID.'
+calmfox_przelewy24.crc.not_blank: 'Enter the CRC key.'
+calmfox_przelewy24.api_key.not_blank: 'Enter the reports key.'

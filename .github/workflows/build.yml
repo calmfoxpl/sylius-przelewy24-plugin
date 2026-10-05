@@ -1,0 +1,76 @@
+name: Build
+
+on:
+    push:
+        branches: [main]
+    pull_request: ~
+    schedule:
+        - cron: "0 3 * * 1" # every Monday, to catch upstream changes
+    workflow_dispatch: ~
+
+concurrency:
+    group: ${{ github.workflow }}-${{ github.ref }}
+    cancel-in-progress: true
+
+permissions:
+    contents: read
+
+jobs:
+    unit:
+        name: "Unit tests, PHP ${{ matrix.php }}"
+        runs-on: ubuntu-latest
+
+        strategy:
+            fail-fast: false
+            matrix:
+                php: ["8.2", "8.3", "8.4"]
+
+        steps:
+            - uses: actions/checkout@v5
+
+            - uses: shivammathur/setup-php@v2
+              with:
+                  php-version: ${{ matrix.php }}
+                  extensions: intl, mbstring, json, dom, simplexml
+                  tools: composer:v2, phpunit:11
+                  coverage: none
+
+            - name: Validate composer.json
+              run: composer validate --strict --no-check-lock
+
+            - name: Lint PHP
+              run: find src tests -name "*.php" -print0 | xargs -0 -n1 php -l
+
+            # The unit suite covers the framework-free core, the wiring and the translations, and
+            # needs neither Sylius nor a Przelewy24 account — so it runs before anything is installed.
+            - name: Unit tests
+              run: phpunit -c phpunit.xml.dist
+
+    static:
+        name: "Static analysis and coding standard"
+        runs-on: ubuntu-latest
+
+        steps:
+            - uses: actions/checkout@v5
+
+            - uses: shivammathur/setup-php@v2
+              with:
+                  php-version: "8.3"
+                  extensions: intl, mbstring, json, dom, simplexml
+                  tools: composer:v2
+                  coverage: none
+
+            - name: Install
+              run: composer install --no-interaction --prefer-dist
+
+            - name: Coding standard
+              run: vendor/bin/ecs check
+
+            - name: Static analysis
+              run: vendor/bin/phpstan analyse
+
+            # The same suite again, this time with the vendor directory. The tests of the API client
+            # and the gateway need Symfony and Sylius and skip themselves without them, so the bare
+            # matrix above never runs them — a regression test that never executes is decoration.
+            - name: Tests with dependencies installed
+              run: vendor/bin/phpunit -c phpunit.xml.dist

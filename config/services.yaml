@@ -1,0 +1,101 @@
+# Explicit definitions rather than autowiring, so that what depends on what can be read here.
+services:
+    _defaults:
+        autowire: false
+        autoconfigure: false
+        public: false
+
+    # ── the API ──────────────────────────────────────────────────────────────
+    calmfox_przelewy24.client:
+        class: Calmfox\SyliusPrzelewy24Plugin\Api\Client
+        arguments:
+            $httpClient: '@http_client'
+
+    calmfox_przelewy24.payment_settlement:
+        class: Calmfox\SyliusPrzelewy24Plugin\Gateway\PaymentSettlement
+        arguments:
+            $client: '@calmfox_przelewy24.client'
+            $stateMachine: '@sylius_abstraction.state_machine'
+            $entityManager: '@doctrine.orm.entity_manager'
+            $logger: '@logger'
+        tags:
+            - { name: monolog.logger, channel: payment }
+
+    # ── the gateway in Sylius's payment requests ────────────────────────────
+    # Indexed by gateway factory: Sylius picks these for payment methods whose gateway is "przelewy24".
+    calmfox_przelewy24.command_provider:
+        class: Calmfox\SyliusPrzelewy24Plugin\PaymentRequest\CommandProvider
+        tags:
+            - { name: sylius.payment_request.command_provider, gateway_factory: przelewy24 }
+
+    calmfox_przelewy24.http_response_provider:
+        class: Calmfox\SyliusPrzelewy24Plugin\PaymentRequest\HttpResponseProvider
+        arguments:
+            $urlGenerator: '@router'
+        tags:
+            - { name: sylius.payment_request.provider.http_response, gateway_factory: przelewy24 }
+
+    calmfox_przelewy24.notify_payment_provider:
+        class: Calmfox\SyliusPrzelewy24Plugin\PaymentRequest\NotifyPaymentProvider
+        arguments:
+            $paymentRequestRepository: '@sylius.repository.payment_request'
+        tags:
+            - { name: sylius.payment_request.payment_notify_provider }
+
+    calmfox_przelewy24.notify_response_provider:
+        class: Calmfox\SyliusPrzelewy24Plugin\PaymentRequest\NotifyResponseProvider
+        decorates: sylius.provider.payment_request.notify_response
+        arguments:
+            $decorated: '@.inner'
+
+    calmfox_przelewy24.handler.capture:
+        class: Calmfox\SyliusPrzelewy24Plugin\PaymentRequest\Handler\CaptureHandler
+        arguments:
+            $paymentRequestProvider: '@sylius.provider.payment_request'
+            $stateMachine: '@sylius_abstraction.state_machine'
+            $client: '@calmfox_przelewy24.client'
+            $urlGenerator: '@router'
+            $translator: '@translator'
+            $logger: '@logger'
+        tags:
+            - { name: messenger.message_handler, bus: sylius.payment_request.command_bus }
+            - { name: monolog.logger, channel: payment }
+
+    calmfox_przelewy24.handler.status:
+        class: Calmfox\SyliusPrzelewy24Plugin\PaymentRequest\Handler\StatusHandler
+        arguments:
+            $paymentRequestProvider: '@sylius.provider.payment_request'
+            $stateMachine: '@sylius_abstraction.state_machine'
+            $client: '@calmfox_przelewy24.client'
+            $settlement: '@calmfox_przelewy24.payment_settlement'
+            $logger: '@logger'
+        tags:
+            - { name: messenger.message_handler, bus: sylius.payment_request.command_bus }
+            - { name: monolog.logger, channel: payment }
+
+    calmfox_przelewy24.handler.notify:
+        class: Calmfox\SyliusPrzelewy24Plugin\PaymentRequest\Handler\NotifyHandler
+        arguments:
+            $paymentRequestProvider: '@sylius.provider.payment_request'
+            $stateMachine: '@sylius_abstraction.state_machine'
+            $settlement: '@calmfox_przelewy24.payment_settlement'
+            $logger: '@logger'
+        tags:
+            - { name: messenger.message_handler, bus: sylius.payment_request.command_bus }
+            - { name: monolog.logger, channel: payment }
+
+    # ── the panel ────────────────────────────────────────────────────────────
+    calmfox_przelewy24.form.gateway_configuration:
+        class: Calmfox\SyliusPrzelewy24Plugin\Form\Type\GatewayConfigurationType
+        tags:
+            - { name: form.type }
+            - { name: sylius.gateway_configuration_type, type: przelewy24, label: calmfox_przelewy24.gateway, priority: 10 }
+
+    calmfox_przelewy24.console.status:
+        class: Calmfox\SyliusPrzelewy24Plugin\Console\StatusCommand
+        arguments:
+            $paymentMethodRepository: '@sylius.repository.payment_method'
+            $client: '@calmfox_przelewy24.client'
+            $urlGenerator: '@router'
+        tags:
+            - { name: console.command, command: 'calmfox:przelewy24:status' }

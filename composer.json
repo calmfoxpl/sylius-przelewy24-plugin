@@ -1,0 +1,72 @@
+{
+    "name": "calmfox/sylius-przelewy24-plugin",
+    "type": "sylius-plugin",
+    "description": "Przelewy24 payments for Sylius 2 on the current REST API and Sylius payment requests: BLIK, bank transfers and cards, verified payments, notifications that cannot be forged, and a command that checks the account before customers do.",
+    "keywords": [
+        "sylius",
+        "sylius-plugin",
+        "przelewy24",
+        "p24",
+        "payment",
+        "payment-gateway",
+        "blik",
+        "poland"
+    ],
+    "license": "MIT",
+    "homepage": "https://github.com/calmfoxpl/sylius-przelewy24-plugin",
+    "authors": [
+        {
+            "name": "Calmfox",
+            "homepage": "https://calmfox.pl"
+        }
+    ],
+    "support": {
+        "issues": "https://github.com/calmfoxpl/sylius-przelewy24-plugin/issues",
+        "source": "https://github.com/calmfoxpl/sylius-przelewy24-plugin",
+        "security": "https://github.com/calmfoxpl/sylius-przelewy24-plugin/security/advisories/new"
+    },
+    "require": {
+        "php": "^8.2",
+        "ext-json": "*",
+        "doctrine/orm": "^2.20 || ^3.0",
+        "symfony/console": "^7.4",
+        "symfony/http-client": "^7.4",
+        "sylius/sylius": "^2.1"
+    },
+    "require-dev": {
+        "phpstan/extension-installer": "^1.4",
+        "phpstan/phpstan": "^2.1",
+        "phpstan/phpstan-doctrine": "^2.0",
+        "phpstan/phpstan-phpunit": "^2.0",
+        "phpstan/phpstan-symfony": "^2.0",
+        "phpunit/phpunit": "^11.5",
+        "sylius-labs/coding-standard": "^4.4"
+    },
+    "autoload": {
+        "psr-4": {
+            "Calmfox\\SyliusPrzelewy24Plugin\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Tests\\Calmfox\\SyliusPrzelewy24Plugin\\": "tests/"
+        }
+    },
+    "config": {
+        "sort-packages": true,
+        "allow-plugins": {
+            "dealerdirect/phpcodesniffer-composer-installer": false,
+            "php-http/discovery": false,
+            "phpstan/extension-installer": true,
+            "symfony/flex": false,
+            "symfony/runtime": false,
+            "symfony/thanks": false
+        }
+    },
+    "extra": {
+        "branch-alias": {
+            "dev-main": "1.0-dev"
+        }
+    },
+    "prefer-stable": true
+}

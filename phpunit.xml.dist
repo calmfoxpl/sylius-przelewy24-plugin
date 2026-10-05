@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+    The unit suite covers the framework-free core (signatures, notifications, session IDs,
+    credentials) and the files that have to agree with the code: the service wiring and the
+    translations. It needs neither Sylius nor a Przelewy24 account:
+
+        vendor/bin/phpunit -c phpunit.xml.dist
+
+    The tests of the API client and the gateway need Symfony and Sylius, and skip themselves
+    when the vendor directory is not there.
+-->
+<phpunit
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    bootstrap="tests/bootstrap.php"
+    cacheDirectory=".phpunit.cache"
+    colors="true"
+    failOnRisky="true"
+    failOnWarning="true"
+    beStrictAboutOutputDuringTests="true"
+>
+    <testsuites>
+        <testsuite name="unit">
+            <directory>tests/Unit</directory>
+        </testsuite>
+    </testsuites>
+
+    <source>
+        <include>
+            <directory>src</directory>
+        </include>
+    </source>
+</phpunit>

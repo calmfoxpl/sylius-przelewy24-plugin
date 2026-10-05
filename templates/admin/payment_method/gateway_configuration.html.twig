@@ -1,0 +1,23 @@
+{% set form = hookable_metadata.context.form %}
+{% set config = form.gatewayConfig.config %}
+{% set method_code = form.vars.data.code ?? null %}
+
+<div class="col-12">
+    {{ form_row(config.sandbox) }}
+</div>
+<div class="col-12 col-md-6">{{ form_row(config.merchant_id) }}</div>
+<div class="col-12 col-md-6">{{ form_row(config.pos_id) }}</div>
+<div class="col-12 col-md-6">{{ form_row(config.crc) }}</div>
+<div class="col-12 col-md-6">{{ form_row(config.api_key) }}</div>
+
+<div class="col-12">
+    <div class="alert alert-info mb-0">
+        <p class="mb-1">{{ 'calmfox_przelewy24.form.notification_url'|trans }}</p>
+        {% if method_code %}
+            <code>{{ url('sylius_payment_method_notify', {code: method_code}) }}</code>
+        {% else %}
+            <code>{{ url('sylius_payment_method_notify', {code: 'CODE'})|replace({'CODE': '{' ~ 'sylius.ui.code'|trans|lower ~ '}'}) }}</code>
+        {% endif %}
+        <p class="mt-2 mb-0 text-secondary">{{ 'calmfox_przelewy24.form.notification_url_help'|trans }}</p>
+    </div>
+</div>

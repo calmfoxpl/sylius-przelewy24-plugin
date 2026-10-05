@@ -1,0 +1,4 @@
+calmfox_przelewy24.digits_only: 'Wpisz same cyfry.'
+calmfox_przelewy24.merchant_id.not_blank: 'Wpisz ID sprzedawcy.'
+calmfox_przelewy24.crc.not_blank: 'Wpisz klucz do CRC.'
+calmfox_przelewy24.api_key.not_blank: 'Wpisz klucz do raportów.'

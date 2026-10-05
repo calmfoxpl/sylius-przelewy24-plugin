@@ -1,0 +1,7 @@
+/vendor/
+/node_modules/
+/composer.lock
+/var/
+/.phpunit.cache/
+/tests/TestApplication/.env.local
+/tests/TestApplication/.env.*.local

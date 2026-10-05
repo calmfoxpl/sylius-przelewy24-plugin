@@ -1,0 +1,10 @@
+# The gateway's fields in the payment method form. Sylius renders a hook named after the gateway
+# factory inside the "Gateway configuration" card, for both the create and the update page.
+sylius_twig_hooks:
+    hooks:
+        'sylius_admin.payment_method.create.content.form.sections.gateway_configuration.przelewy24':
+            przelewy24:
+                template: '@CalmfoxSyliusPrzelewy24Plugin/admin/payment_method/gateway_configuration.html.twig'
+        'sylius_admin.payment_method.update.content.form.sections.gateway_configuration.przelewy24':
+            przelewy24:
+                template: '@CalmfoxSyliusPrzelewy24Plugin/admin/payment_method/gateway_configuration.html.twig'
