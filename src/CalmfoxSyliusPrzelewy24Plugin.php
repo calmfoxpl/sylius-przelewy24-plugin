@@ -11,7 +11,7 @@ final class CalmfoxSyliusPrzelewy24Plugin extends Bundle
 {
     use SyliusPluginTrait;
 
-    public const VERSION = '1.0.0';
+    public const VERSION = '1.1.0';
 
     public function getPath(): string
     {

@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Tests\Calmfox\SyliusPrzelewy24Plugin\Support;
 
+use Calmfox\SyliusPrzelewy24Plugin\Account\CredentialsResolver;
+use Calmfox\SyliusPrzelewy24Plugin\Account\SavedAccount;
 use Calmfox\SyliusPrzelewy24Plugin\Core\Credentials;
 use Calmfox\SyliusPrzelewy24Plugin\Core\Notification;
 use Calmfox\SyliusPrzelewy24Plugin\Core\SessionId;
@@ -100,6 +102,21 @@ final class Shop
     public static function credentials(): Credentials
     {
         return Credentials::fromArray(self::CONFIG);
+    }
+
+    /** Credentials as the handlers get them: from the saved account if given, else the method. */
+    public static function resolver(?Credentials $account = null): CredentialsResolver
+    {
+        return new CredentialsResolver(new class($account) implements SavedAccount {
+            public function __construct(private readonly ?Credentials $account)
+            {
+            }
+
+            public function credentials(): ?Credentials
+            {
+                return $this->account;
+            }
+        });
     }
 
     public static function withPayload(PaymentRequestInterface $request, string $body): PaymentRequestInterface

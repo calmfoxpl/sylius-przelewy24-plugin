@@ -105,6 +105,7 @@ final class NotifyTest extends SyliusTestCase
             $stateMachine,
             new PaymentSettlement($client, $stateMachine, $this->createMock(EntityManagerInterface::class), new NullLogger()),
             new NullLogger(),
+            Shop::resolver(),
         );
     }
 }

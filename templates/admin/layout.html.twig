@@ -1,0 +1,31 @@
+{#
+    The frame of the plugin's own page.
+
+    Sylius 2 assembles its admin pages from twig hooks, and its base layout has a `body` block and
+    nothing else: the side menu and the top bar are put there by the pages themselves. A page that
+    only extends the base is a page with no way back to the rest of the panel, so the frame adds
+    them once, here, the way the CRUD pages do.
+
+    Flash messages are written out here rather than through Sylius' own partial, which translates
+    in the `flashes` domain; what this page says lives in `messages`.
+#}
+{% extends '@SyliusAdmin/shared/layout/base.html.twig' %}
+
+{% block body %}
+    {% include '@SyliusAdmin/shared/crud/common/sidebar.html.twig' %}
+    {% include '@SyliusAdmin/shared/crud/common/navbar.html.twig' %}
+
+    <div class="page-wrapper">
+        <div class="page-body">
+            <div class="container-xl">
+                {% for type, messages in app.flashes %}
+                    {% for message in messages %}
+                        <div class="alert alert-{{ type == 'error' ? 'danger' : type }}" role="alert">{{ message|trans }}</div>
+                    {% endfor %}
+                {% endfor %}
+
+                {% block content %}{% endblock %}
+            </div>
+        </div>
+    </div>
+{% endblock %}

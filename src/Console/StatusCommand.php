@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Calmfox\SyliusPrzelewy24Plugin\Console;
 
+use Calmfox\SyliusPrzelewy24Plugin\Account\CredentialsResolver;
 use Calmfox\SyliusPrzelewy24Plugin\Api\ApiException;
 use Calmfox\SyliusPrzelewy24Plugin\Api\Client;
 use Calmfox\SyliusPrzelewy24Plugin\Gateway\Przelewy24Gateway;
@@ -17,8 +18,10 @@ use Symfony\Component\Console\Style\SymfonyStyle;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 
 /**
- * Checks every Przelewy24 payment method: whether its account details are complete and whether
- * Przelewy24 accepts them (GET /api/v1/testAccess). Meant for the moment after the keys have been
+ * Checks every Przelewy24 payment method: whether the account it pays into is complete and whether
+ * Przelewy24 accepts it (GET /api/v1/testAccess). That is the account saved in Calmfox services →
+ * Przelewy24, or, on an installation upgraded from 1.0 where it has not been saved yet, the keys
+ * the method still carries; the output says which. Meant for the moment after the keys have been
  * entered and before the method is switched on for customers, and for a deployment pipeline:
  *
  *     bin/console calmfox:przelewy24:status
@@ -33,6 +36,7 @@ final class StatusCommand extends Command
         private readonly PaymentMethodRepositoryInterface $paymentMethodRepository,
         private readonly Client $client,
         private readonly UrlGeneratorInterface $urlGenerator,
+        private readonly CredentialsResolver $credentials,
     ) {
         parent::__construct();
     }
@@ -53,13 +57,14 @@ final class StatusCommand extends Command
 
         $broken = false;
         foreach ($methods as $method) {
-            $credentials = Przelewy24Gateway::credentials($method);
+            $credentials = $this->credentials->forMethod($method);
             $label = sprintf(
-                '%s (%s, %s, merchant %s)',
+                '%s (%s, %s, merchant %s, %s)',
                 (string) $method->getCode(),
                 $method->isEnabled() ? 'enabled' : 'disabled',
                 $credentials->sandbox ? 'SANDBOX' : 'PRODUCTION',
-                $credentials->merchantId > 0 ? (string) $credentials->merchantId : '—',
+                $credentials->merchantId > 0 ? (string) $credentials->merchantId : '-',
+                CredentialsResolver::SOURCE_ACCOUNT === $this->credentials->sourceFor($method) ? 'keys from the account page' : 'keys stored with the method',
             );
 
             $problem = null;

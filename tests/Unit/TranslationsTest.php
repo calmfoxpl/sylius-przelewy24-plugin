@@ -44,7 +44,7 @@ final class TranslationsTest extends TestCase
                 $sources[] = $file->getPathname();
             }
         }
-        $sources = array_merge($sources, glob(\dirname(__DIR__, 2) . '/templates/admin/*/*.twig') ?: []);
+        $sources = array_merge($sources, glob(\dirname(__DIR__, 2) . '/templates/admin/{,*/}*.twig', \GLOB_BRACE) ?: []);
 
         $used = ['calmfox_przelewy24.gateway' => 'services.yaml'];
         foreach ($sources as $source) {

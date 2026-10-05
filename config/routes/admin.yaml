@@ -1,0 +1,15 @@
+# The account page and its check, behind the admin firewall by living under its prefix:
+#   calmfox_przelewy24_admin:
+#       resource: '@CalmfoxSyliusPrzelewy24Plugin/config/routes/admin.yaml'
+#       prefix: '/%sylius_admin.path_name%'
+calmfox_przelewy24_admin_account:
+    path: /przelewy24
+    methods: [GET, POST]
+    defaults:
+        _controller: calmfox_przelewy24.controller.account
+
+calmfox_przelewy24_admin_account_check:
+    path: /przelewy24/check
+    methods: [POST]
+    defaults:
+        _controller: calmfox_przelewy24.controller.check

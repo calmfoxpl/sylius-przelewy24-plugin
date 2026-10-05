@@ -1,0 +1,76 @@
+{#
+    Calmfox services → Przelewy24: the account every Przelewy24 payment method pays into.
+
+    The methods themselves stay in Configuration → Payment methods. Here: the mode, the IDs, the two
+    keys, a button that asks Przelewy24 whether it accepts them, and the notification addresses.
+#}
+{% extends '@CalmfoxSyliusPrzelewy24Plugin/admin/layout.html.twig' %}
+
+{% block title %}{{ 'calmfox_przelewy24.account.title'|trans }} | {{ parent() }}{% endblock %}
+
+{% block content %}
+    {% form_theme form '@SyliusAdmin/shared/form_theme.html.twig' %}
+
+    <div class="page-header d-print-none mb-4">
+        <h2 class="page-title">{{ 'calmfox_przelewy24.account.title'|trans }}</h2>
+        <p class="text-secondary mt-1 mb-0">
+            {{ 'calmfox_przelewy24.account.lead'|trans }}
+            <a href="{{ path('sylius_admin_payment_method_index') }}">{{ 'calmfox_przelewy24.account.methods_link'|trans }}</a>
+        </p>
+    </div>
+
+    {% if methods_with_own_keys is not empty %}
+        <div class="alert alert-info">
+            <p class="mb-1">{{ 'calmfox_przelewy24.account.from_method'|trans({'%methods%': methods_with_own_keys|map(m => m.name ?? m.code)|join(', ')}) }}</p>
+            <p class="mb-0">{{ 'calmfox_przelewy24.account.from_method_help'|trans }}</p>
+        </div>
+    {% elseif not saved %}
+        <div class="alert alert-warning">{{ 'calmfox_przelewy24.account.not_saved'|trans }}</div>
+    {% endif %}
+
+    {{ form_start(form) }}
+        <div class="card mb-4">
+            <div class="card-header"><h3 class="card-title">{{ 'calmfox_przelewy24.account.card'|trans }}</h3></div>
+            <div class="card-body">
+                {{ form_row(form.sandbox) }}
+                <div class="row">
+                    <div class="col-12 col-md-6">{{ form_row(form.merchant_id) }}</div>
+                    <div class="col-12 col-md-6">{{ form_row(form.pos_id) }}</div>
+                    <div class="col-12 col-md-6">{{ form_row(form.crc) }}</div>
+                    <div class="col-12 col-md-6">{{ form_row(form.api_key) }}</div>
+                </div>
+            </div>
+            <div class="card-footer">
+                <button type="submit" class="btn btn-primary">{{ 'sylius.ui.save'|trans }}</button>
+            </div>
+        </div>
+    {{ form_end(form) }}
+
+    <div class="card mb-4">
+        <div class="card-header"><h3 class="card-title">{{ 'calmfox_przelewy24.account.check'|trans }}</h3></div>
+        <div class="card-body">
+            <p class="text-secondary">{{ 'calmfox_przelewy24.account.check_help'|trans }}</p>
+            <form method="post" action="{{ path('calmfox_przelewy24_admin_account_check') }}">
+                <input type="hidden" name="_token" value="{{ csrf_token('calmfox_przelewy24_check') }}">
+                <button type="submit" class="btn">{{ 'calmfox_przelewy24.account.check_button'|trans }}</button>
+            </form>
+        </div>
+    </div>
+
+    {% if methods is not empty %}
+        <div class="card mb-4">
+            <div class="card-header"><h3 class="card-title">{{ 'calmfox_przelewy24.form.notification_url'|trans }}</h3></div>
+            <div class="card-body">
+                <ul class="mb-2">
+                    {% for method in methods %}
+                        <li>
+                            <a href="{{ path('sylius_admin_payment_method_update', {id: method.id}) }}">{{ method.name ?? method.code }}</a>{% if not method.enabled %} <span class="text-secondary">({{ 'calmfox_przelewy24.account.disabled'|trans }})</span>{% endif %}:
+                            <code>{{ url('sylius_payment_method_notify', {code: method.code}) }}</code>
+                        </li>
+                    {% endfor %}
+                </ul>
+                <p class="mb-0 text-secondary">{{ 'calmfox_przelewy24.form.notification_url_help'|trans }}</p>
+            </div>
+        </div>
+    {% endif %}
+{% endblock %}

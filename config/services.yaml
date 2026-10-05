@@ -21,6 +21,22 @@ services:
         tags:
             - { name: monolog.logger, channel: payment }
 
+    # ── the account ──────────────────────────────────────────────────────────
+    calmfox_przelewy24.account_store:
+        class: Calmfox\SyliusPrzelewy24Plugin\Account\AccountStore
+        arguments:
+            $entityManager: '@doctrine.orm.entity_manager'
+            $paymentMethodRepository: '@sylius.repository.payment_method'
+            $logger: '@logger'
+            $encrypter: '@?sylius.encrypter'
+        tags:
+            - { name: monolog.logger, channel: payment }
+
+    calmfox_przelewy24.credentials_resolver:
+        class: Calmfox\SyliusPrzelewy24Plugin\Account\CredentialsResolver
+        arguments:
+            $account: '@calmfox_przelewy24.account_store'
+
     # ── the gateway in Sylius's payment requests ────────────────────────────
     # Indexed by gateway factory: Sylius picks these for payment methods whose gateway is "przelewy24".
     calmfox_przelewy24.command_provider:
@@ -51,6 +67,7 @@ services:
     calmfox_przelewy24.handler.capture:
         class: Calmfox\SyliusPrzelewy24Plugin\PaymentRequest\Handler\CaptureHandler
         arguments:
+            $credentials: '@calmfox_przelewy24.credentials_resolver'
             $paymentRequestProvider: '@sylius.provider.payment_request'
             $stateMachine: '@sylius_abstraction.state_machine'
             $client: '@calmfox_przelewy24.client'
@@ -64,6 +81,7 @@ services:
     calmfox_przelewy24.handler.status:
         class: Calmfox\SyliusPrzelewy24Plugin\PaymentRequest\Handler\StatusHandler
         arguments:
+            $credentials: '@calmfox_przelewy24.credentials_resolver'
             $paymentRequestProvider: '@sylius.provider.payment_request'
             $stateMachine: '@sylius_abstraction.state_machine'
             $client: '@calmfox_przelewy24.client'
@@ -76,6 +94,7 @@ services:
     calmfox_przelewy24.handler.notify:
         class: Calmfox\SyliusPrzelewy24Plugin\PaymentRequest\Handler\NotifyHandler
         arguments:
+            $credentials: '@calmfox_przelewy24.credentials_resolver'
             $paymentRequestProvider: '@sylius.provider.payment_request'
             $stateMachine: '@sylius_abstraction.state_machine'
             $settlement: '@calmfox_przelewy24.payment_settlement'
@@ -94,8 +113,47 @@ services:
     calmfox_przelewy24.console.status:
         class: Calmfox\SyliusPrzelewy24Plugin\Console\StatusCommand
         arguments:
+            $credentials: '@calmfox_przelewy24.credentials_resolver'
             $paymentMethodRepository: '@sylius.repository.payment_method'
             $client: '@calmfox_przelewy24.client'
             $urlGenerator: '@router'
         tags:
             - { name: console.command, command: 'calmfox:przelewy24:status' }
+
+    calmfox_przelewy24.controller.account:
+        class: Calmfox\SyliusPrzelewy24Plugin\Controller\Admin\AccountAction
+        public: true
+        arguments:
+            $store: '@calmfox_przelewy24.account_store'
+            $formFactory: '@form.factory'
+            $urlGenerator: '@router'
+            $twig: '@twig'
+
+    calmfox_przelewy24.controller.check:
+        class: Calmfox\SyliusPrzelewy24Plugin\Controller\Admin\CheckAction
+        public: true
+        arguments:
+            $store: '@calmfox_przelewy24.account_store'
+            $client: '@calmfox_przelewy24.client'
+            $csrf: '@security.csrf.token_manager'
+            $urlGenerator: '@router'
+            $logger: '@logger'
+        tags:
+            - { name: monolog.logger, channel: payment }
+
+    calmfox_przelewy24.form.account:
+        class: Calmfox\SyliusPrzelewy24Plugin\Form\Type\AccountType
+        tags:
+            - { name: form.type }
+
+    calmfox_przelewy24.twig.account:
+        class: Calmfox\SyliusPrzelewy24Plugin\Twig\AccountExtension
+        arguments:
+            $store: '@calmfox_przelewy24.account_store'
+        tags:
+            - { name: twig.extension }
+
+    calmfox_przelewy24.menu_listener:
+        class: Calmfox\SyliusPrzelewy24Plugin\Menu\AdminMenuListener
+        tags:
+            - { name: kernel.event_listener, event: sylius.menu.admin.main }

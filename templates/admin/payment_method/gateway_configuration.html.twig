@@ -1,14 +1,31 @@
+{#
+    The gateway section of a Przelewy24 payment method. The account itself is on its own page
+    (Calmfox services → Przelewy24); this only says which account the method pays into.
+#}
 {% set form = hookable_metadata.context.form %}
-{% set config = form.gatewayConfig.config %}
 {% set method_code = form.vars.data.code ?? null %}
+{% set own_config = form.gatewayConfig.config.vars.value ?? {} %}
+{% set account = calmfox_przelewy24_account() %}
+{% set account_url = path('calmfox_przelewy24_admin_account') %}
 
 <div class="col-12">
-    {{ form_row(config.sandbox) }}
+    {% if account.saved %}
+        <div class="alert alert-secondary">
+            <p class="mb-1">{{ 'calmfox_przelewy24.method.uses_account'|trans({'%merchant%': account.merchant_id, '%mode%': (account.sandbox ? 'calmfox_przelewy24.mode.sandbox' : 'calmfox_przelewy24.mode.production')|trans}) }}</p>
+            <a href="{{ account_url }}">{{ 'calmfox_przelewy24.method.open_account'|trans }}</a>
+        </div>
+    {% elseif own_config.crc is defined and own_config.crc is not empty %}
+        <div class="alert alert-warning">
+            <p class="mb-1">{{ 'calmfox_przelewy24.method.own_keys'|trans }}</p>
+            <a href="{{ account_url }}">{{ 'calmfox_przelewy24.method.move_keys'|trans }}</a>
+        </div>
+    {% else %}
+        <div class="alert alert-warning">
+            <p class="mb-1">{{ 'calmfox_przelewy24.method.no_account'|trans }}</p>
+            <a href="{{ account_url }}">{{ 'calmfox_przelewy24.method.open_account'|trans }}</a>
+        </div>
+    {% endif %}
 </div>
-<div class="col-12 col-md-6">{{ form_row(config.merchant_id) }}</div>
-<div class="col-12 col-md-6">{{ form_row(config.pos_id) }}</div>
-<div class="col-12 col-md-6">{{ form_row(config.crc) }}</div>
-<div class="col-12 col-md-6">{{ form_row(config.api_key) }}</div>
 
 <div class="col-12">
     <div class="alert alert-info mb-0">

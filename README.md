@@ -34,9 +34,14 @@ payment request flow Sylius 2 is built around.
 - **Every visit is a fresh transaction.** A Przelewy24 token expires and a session ID may be used
   only once, so a customer who comes back to pay an hour later is not sent to a dead link. A
   notification for any attempt — including one paid in a tab left open — finds its payment.
-- **Keys that stay where they were put.** The CRC key and the reports key are stored in the gateway
-  configuration (encrypted, when the shop has Sylius's encryption key) and are never rendered back
-  into the panel; a key field left empty on save keeps the stored key.
+- **The account on a page of its own.** The merchant ID, the keys and the test/production switch
+  are set once for the shop in **Calmfox services → Przelewy24**, a group of the admin menu that
+  every Calmfox plugin shares. The payment methods keep their names, channels and positions in
+  Configuration → Payment methods and say which account they pay into. The page also has a
+  "Check now" button and lists the notification address of every method.
+- **Keys that stay where they were put.** The CRC key and the reports key are encrypted with
+  Sylius's payment encryption key and are never rendered back into the panel; a key field left
+  empty on save keeps the stored key.
 - **A sandbox switch that cannot be forgotten in the wrong position.** A method that says nothing
   about its environment talks to the sandbox.
 - **A check before customers find out.** `bin/console calmfox:przelewy24:status` tells whether each
@@ -69,8 +74,24 @@ imports:
     - { resource: '@CalmfoxSyliusPrzelewy24Plugin/config/config.yaml' }
 ```
 
-There is no database schema of its own: the keys live in the payment method's gateway
-configuration, and transactions in Sylius's payment requests and payment details.
+Import the routes of the account page under the admin prefix, for example in
+`config/routes/calmfox_sylius_przelewy24.yaml`:
+
+```yaml
+calmfox_przelewy24_admin:
+    resource: '@CalmfoxSyliusPrzelewy24Plugin/config/routes/admin.yaml'
+    prefix: '/%sylius_admin.path_name%'
+```
+
+Create the account table:
+
+```bash
+bin/console doctrine:migrations:diff
+bin/console doctrine:migrations:migrate
+```
+
+The plugin has one table of its own, `calmfox_przelewy24_account`, with the one account row.
+Transactions live in Sylius's payment requests and payment details.
 
 The payment request transport has to stay synchronous (Sylius's default,
 `SYLIUS_MESSENGER_TRANSPORT_PAYMENT_REQUEST_DSN=sync://`): the customer is redirected to the
@@ -78,7 +99,7 @@ payment page in the same request in which the transaction is registered.
 
 ## Configuration
 
-In the panel: **Configuration → Payment methods → Create → Przelewy24**, then:
+In the panel, first the account: **Calmfox services → Przelewy24**.
 
 | Field | Where to find it in the Przelewy24 panel |
 | --- | --- |
@@ -88,14 +109,23 @@ In the panel: **Configuration → Payment methods → Create → Przelewy24**, t
 | CRC key | My data → API data and configuration → "CRC key" |
 | Reports key | My data → API data and configuration → "Reports key" (the REST API password) |
 
-Then check it:
+Save, then press **Check now** on the same page, or from the console:
 
 ```bash
 bin/console calmfox:przelewy24:status
 ```
 
+Then the method: **Configuration → Payment methods → Create → Przelewy24**. It has no account
+fields; name it, pick its channels and switch it on.
+
+**Upgrading from 1.0**, where the keys were entered on the payment method: after the migration,
+methods keep paying with the keys stored with them until the account is saved. The account page
+starts filled in from those keys, so moving them is one press of **Save**, which also removes them
+from the methods.
+
 Nothing has to be entered on the Przelewy24 side: the return and notification addresses travel
-with every transaction. The notification address is shown under the form — usually
+with every transaction. The notification address is shown on the account page and on the method,
+usually
 `https://your-shop/payment-methods/<method code>` — and the server has to accept POST requests to it
 from Przelewy24: no HTTP authentication and no maintenance page in front of it. Set the router's
 default URI (`framework.router.default_uri`) if you want the console command to print it with your

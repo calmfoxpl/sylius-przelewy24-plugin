@@ -169,7 +169,7 @@ final class CaptureAndReturnTest extends SyliusTestCase
         $translator = $this->createMock(TranslatorInterface::class);
         $translator->method('trans')->willReturnCallback(static fn (string $id, array $parameters): string => 'Zamówienie nr ' . $parameters['%number%']);
 
-        (new CaptureHandler($this->provider($request), new StateMachine(), $this->client, $this->urls(), $translator, new NullLogger()))(
+        (new CaptureHandler($this->provider($request), new StateMachine(), $this->client, $this->urls(), $translator, new NullLogger(), Shop::resolver()))(
             new CapturePaymentRequest($request->getId()),
         );
     }
@@ -179,7 +179,7 @@ final class CaptureAndReturnTest extends SyliusTestCase
         $stateMachine = new StateMachine();
         $settlement = new PaymentSettlement($this->client, $stateMachine, $this->createMock(EntityManagerInterface::class), new NullLogger());
 
-        (new StatusHandler($this->provider($request), $stateMachine, $this->client, $settlement, new NullLogger()))(
+        (new StatusHandler($this->provider($request), $stateMachine, $this->client, $settlement, new NullLogger(), Shop::resolver()))(
             new StatusPaymentRequest($request->getId()),
         );
     }

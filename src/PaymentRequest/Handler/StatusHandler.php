@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Calmfox\SyliusPrzelewy24Plugin\PaymentRequest\Handler;
 
+use Calmfox\SyliusPrzelewy24Plugin\Account\CredentialsResolver;
 use Calmfox\SyliusPrzelewy24Plugin\Api\ApiException;
 use Calmfox\SyliusPrzelewy24Plugin\Api\Client;
 use Calmfox\SyliusPrzelewy24Plugin\Core\TransactionStatus;
@@ -32,6 +33,7 @@ final class StatusHandler
         private readonly Client $client,
         private readonly PaymentSettlement $settlement,
         private readonly LoggerInterface $logger,
+        private readonly CredentialsResolver $credentials,
     ) {
     }
 
@@ -40,7 +42,7 @@ final class StatusHandler
         $paymentRequest = $this->paymentRequestProvider->provide($command);
         /** @var PaymentInterface $payment */
         $payment = $paymentRequest->getPayment();
-        $credentials = Przelewy24Gateway::credentials($paymentRequest->getMethod());
+        $credentials = $this->credentials->forMethod($paymentRequest->getMethod());
         $sessionId = $payment->getDetails()[Przelewy24Gateway::DETAILS_SESSION_ID] ?? null;
 
         if (PaymentInterface::STATE_COMPLETED !== $payment->getState() && \is_string($sessionId) && $credentials->isComplete()) {

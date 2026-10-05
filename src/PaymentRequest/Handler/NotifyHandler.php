@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace Calmfox\SyliusPrzelewy24Plugin\PaymentRequest\Handler;
 
+use Calmfox\SyliusPrzelewy24Plugin\Account\CredentialsResolver;
 use Calmfox\SyliusPrzelewy24Plugin\Core\Notification;
 use Calmfox\SyliusPrzelewy24Plugin\Gateway\PaymentSettlement;
-use Calmfox\SyliusPrzelewy24Plugin\Gateway\Przelewy24Gateway;
 use Calmfox\SyliusPrzelewy24Plugin\PaymentRequest\Command\NotifyPaymentRequest;
 use Psr\Log\LoggerInterface;
 use Sylius\Abstraction\StateMachine\StateMachineInterface;
@@ -31,6 +31,7 @@ final class NotifyHandler
         private readonly StateMachineInterface $stateMachine,
         private readonly PaymentSettlement $settlement,
         private readonly LoggerInterface $logger,
+        private readonly CredentialsResolver $credentials,
     ) {
     }
 
@@ -39,7 +40,7 @@ final class NotifyHandler
         $paymentRequest = $this->paymentRequestProvider->provide($command);
         /** @var PaymentInterface $payment */
         $payment = $paymentRequest->getPayment();
-        $credentials = Przelewy24Gateway::credentials($paymentRequest->getMethod());
+        $credentials = $this->credentials->forMethod($paymentRequest->getMethod());
 
         $request = $paymentRequest->getPayload()['http_request'] ?? null;
         $body = \is_array($request) && \is_string($request['content'] ?? null) ? $request['content'] : '';

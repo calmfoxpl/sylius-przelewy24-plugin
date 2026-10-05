@@ -5,6 +5,29 @@ All notable changes to this project are documented in this file. The format foll
 
 ## [Unreleased]
 
+## [1.1.0] - 2026-10-05
+
+### Added
+
+- **Calmfox services → Przelewy24**: the account (test or production mode, merchant and point of sale
+  IDs, CRC key, reports key) is set once for the shop on a page of its own, in the admin menu group
+  every Calmfox plugin shares. The page has a connection check and lists the notification address
+  of every Przelewy24 method.
+- Table `calmfox_przelewy24_account` for that account; the keys are encrypted with Sylius's payment
+  encryption key.
+
+### Changed
+
+- The payment method form has no account fields any more. It says which account the method pays
+  into, and links to the account page.
+- `calmfox:przelewy24:status` says whether a method uses the saved account or keys of its own.
+
+### Upgrading
+
+- Import `@CalmfoxSyliusPrzelewy24Plugin/config/routes/admin.yaml` under the admin prefix and run the
+  migrations. Until the account is saved, methods keep paying with the keys stored with them; saving
+  it moves the keys to the account page and removes them from the methods.
+
 ## [1.0.0] - 2026-10-05
 
 ### Added

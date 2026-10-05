@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Calmfox\SyliusPrzelewy24Plugin\PaymentRequest\Handler;
 
+use Calmfox\SyliusPrzelewy24Plugin\Account\CredentialsResolver;
 use Calmfox\SyliusPrzelewy24Plugin\Api\ApiException;
 use Calmfox\SyliusPrzelewy24Plugin\Api\Client;
 use Calmfox\SyliusPrzelewy24Plugin\Core\SessionId;
@@ -38,6 +39,7 @@ final class CaptureHandler
         private readonly UrlGeneratorInterface $urlGenerator,
         private readonly TranslatorInterface $translator,
         private readonly LoggerInterface $logger,
+        private readonly CredentialsResolver $credentials,
     ) {
     }
 
@@ -54,9 +56,9 @@ final class CaptureHandler
             return;
         }
 
-        $credentials = Przelewy24Gateway::credentials($method);
+        $credentials = $this->credentials->forMethod($method);
         if (!$credentials->isComplete()) {
-            $this->logger->error('Przelewy24: the payment method is missing its merchant ID, CRC key or reports key.', ['method' => $method->getCode()]);
+            $this->logger->error('Przelewy24: the account is missing its merchant ID, CRC key or reports key (Calmfox services → Przelewy24).', ['method' => $method->getCode()]);
             $this->transition($paymentRequest, PaymentRequestTransitions::TRANSITION_FAIL);
 
             return;

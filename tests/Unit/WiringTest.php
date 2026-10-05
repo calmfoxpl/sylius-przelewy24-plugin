@@ -78,15 +78,46 @@ final class WiringTest extends TestCase
         }
     }
 
-    /** Every field of the form is rendered by the template, or it would silently not be saved. */
-    public function testTheTemplateRendersEveryFieldOfTheForm(): void
+    /** Every field of the account form is rendered by the page, or it would silently not be saved. */
+    public function testTheAccountPageRendersEveryFieldOfTheForm(): void
     {
-        preg_match_all("/->add\\('([a-z_]+)'/", self::read('src/Form/Type/GatewayConfigurationType.php'), $fields);
-        $template = self::read('templates/admin/payment_method/gateway_configuration.html.twig');
+        preg_match_all("/->add\\('([a-z_]+)'/", self::read('src/Form/Type/AccountType.php'), $fields);
+        $template = self::read('templates/admin/account.html.twig');
 
         self::assertCount(5, $fields[1]);
         foreach ($fields[1] as $field) {
-            self::assertStringContainsString(sprintf('form_row(config.%s)', $field), $template);
+            self::assertStringContainsString(sprintf('form_row(form.%s)', $field), $template);
+        }
+    }
+
+    /** The account fields live on the account page only, never again on the payment method. */
+    public function testThePaymentMethodFormHasNoAccountFields(): void
+    {
+        self::assertStringNotContainsString('->add(', self::read('src/Form/Type/GatewayConfigurationType.php'));
+        self::assertStringNotContainsString('form_row(', self::read('templates/admin/payment_method/gateway_configuration.html.twig'));
+    }
+
+    /** Routes named by the menu, the controllers and the templates are the ones the plugin defines. */
+    public function testEveryRouteOfThePluginIsDefined(): void
+    {
+        preg_match_all('/^(calmfox_przelewy24_[a-z0-9_]+):$/m', self::read('config/routes/admin.yaml'), $defined);
+        self::assertCount(2, $defined[1]);
+
+        $sources = self::read('src/Menu/AdminMenuListener.php') . self::read('src/Controller/Admin/AccountAction.php') .
+            self::read('src/Controller/Admin/CheckAction.php') . self::read('templates/admin/account.html.twig') .
+            self::read('templates/admin/payment_method/gateway_configuration.html.twig');
+        preg_match_all("/'(calmfox_przelewy24_[a-z0-9_]+)'/", $sources, $used);
+        self::assertNotEmpty($used[1]);
+        foreach (array_unique($used[1]) as $route) {
+            if ('calmfox_przelewy24_check' === $route) {
+                continue; // the CSRF token id, not a route
+            }
+            self::assertContains($route, $defined[1], sprintf('%s is used but not defined', $route));
+        }
+
+        preg_match_all('/_controller: (calmfox_przelewy24\.[a-z0-9_.]+)/', self::read('config/routes/admin.yaml'), $controllers);
+        foreach ($controllers[1] as $controller) {
+            self::assertMatchesRegularExpression('/^    ' . preg_quote($controller, '/') . ":\n(?:        .*\n)*?        public: true\n/m", self::read('config/services.yaml'));
         }
     }
 
